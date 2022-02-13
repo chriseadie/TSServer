@@ -3,9 +3,13 @@ import ServiceCollection from "../ServiceCollection";
 export function Get(){
     return function (target: any, name: string, descriptor: PropertyDescriptor){
         const originalMethod = descriptor.value;
-        descriptor.value = function(...args:any){
-            const methodType = ServiceCollection.GetRequest()?.method;
-            if(methodType != "GET") return {statusCode:500,type:"document",body:`Cannot use ${methodType} on a Delete method`};
+        descriptor.value = function(...args:any[]){
+            const request = ServiceCollection.GetRequest()
+            if(request?.method != "GET") return {statusCode:500,type:"document",body:`Cannot use ${request?.method} on a Delete method`};       
+            var url = new URL(request?.url as string,`http://${request?.headers.host}`);
+            url.searchParams.forEach((x,v) => {
+                args.push(x);
+            })
             return originalMethod.apply(this,args);
         }
         return descriptor

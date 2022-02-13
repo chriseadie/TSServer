@@ -22,12 +22,12 @@ class ServiceCollection implements Partial<IServiceCollection>{
 
         const url = new URL(this.req?.url as string,`http://${this.req?.headers.host}`);
 
-        if(ApplicationBuilder.useStaticAssets && x.pathname.startsWith(ApplicationBuilder.staticAssetPath)){
+        if(ApplicationBuilder.useStaticAssets && url.pathname.startsWith(ApplicationBuilder.staticAssetPath)){
             console.log("create method to load assets from provided path")
         }
 
         try{
-            const actionResponse = this.Router(url);
+            const actionResponse = await this.Router(url);
             this.CreateResponseResult(actionResponse);
         }catch(err:any){
             this.CreateResponseResult({

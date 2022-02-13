@@ -1,6 +1,7 @@
 import {ServerResponse} from 'http';
 import { Ok } from '../Core/ActionResults/actions';
 import { Get, Post } from '../Core/Attributes/ActionType';
+import { FromQuery } from '../Core/Attributes/FromQuery';
 import { Injectable,Inject } from '../Core/Attributes/Injectable';
 import { ServiceTypes } from '../Services/Interfaces';
 import {IUserRepository} from '../Services/Interfaces';
@@ -14,9 +15,9 @@ export class HomeController {
         this._userApi = userApi
     }
 
-    @Post()
-    public async Index(){
-        console.log("index method hit")
+    @Get()
+    public async Index(processID:string,anything:string){
+        console.log(typeof processID,typeof anything);
         const userRes = this._userApi.GetAllUsers();
         var res = {value:"testing",data:userRes};
         return Ok(res);
