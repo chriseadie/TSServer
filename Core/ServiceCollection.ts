@@ -20,28 +20,15 @@ class ServiceCollection implements Partial<IServiceCollection>{
     public async AddControllersWithViews(){
         if(this.req?.url?.includes("favicon")) return;
 
-        const x = new URL(this.req?.url as string,`http://${this.req?.headers.host}`);
+        const url = new URL(this.req?.url as string,`http://${this.req?.headers.host}`);
 
         if(ApplicationBuilder.useStaticAssets && x.pathname.startsWith(ApplicationBuilder.staticAssetPath)){
             console.log("create method to load assets from provided path")
         }
 
         try{
-        let controller = "";
-        let method = ""
-        if(x.pathname == "/"){
-            controller = "Home";
-            method = "Index"
-        } else {
-            var route = x.pathname.slice(1).split("/");
-            controller = route[0];
-            method = route[1] ?? "Index"
-        }
-        const classLoader = await import(`../Controllers/${controller}Controller.ts`)
-        var instance = new classLoader[`${controller}Controller`]
-        var actionResponse = await instance[method](x,this.res);
-        console.log(actionResponse);
-        this.CreateResponseResult(actionResponse);
+            const actionResponse = this.Router(url);
+            this.CreateResponseResult(actionResponse);
         }catch(err:any){
             this.CreateResponseResult({
                 statusCode:500,
@@ -58,6 +45,22 @@ class ServiceCollection implements Partial<IServiceCollection>{
 
     public GetRequest():IncomingMessage | null{
         return this.req;
+    }
+
+    private async Router(url:URL){
+        let controller = "";
+        let method = ""
+        if(url.pathname == "/"){
+            controller = "Home";
+            method = "Index"
+        } else {
+            var route = url.pathname.slice(1).split("/");
+            controller = route[0];
+            method = route[1] ?? "Index"
+        }
+        const classLoader = await import(`../Controllers/${controller}Controller.ts`)
+        var instance = new classLoader[`${controller}Controller`]
+        return await instance[method]();
     }
 
     private CreateResponseResult(options:any){
