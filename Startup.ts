@@ -19,6 +19,10 @@ class Startup {
             endpoints.route = "/Controller/:id"
         })
 
+        app.UseStaticAssets((options:any) => {
+            options.staticAssetPath = "/Public"
+        })
+
     }
 }
 

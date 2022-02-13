@@ -1,6 +1,7 @@
 import {IncomingMessage,ServerResponse} from 'http';
 import { IServiceCollection } from './Interfaces/IServiceCollection';
 import SingletonService from './SingletonService';
+import ApplicationBuilder from './ApplicationBuilder';
 
 class ServiceCollection implements Partial<IServiceCollection>{
 
@@ -21,6 +22,11 @@ class ServiceCollection implements Partial<IServiceCollection>{
 
         const x = new URL(this.req?.url as string,`http://${this.req?.headers.host}`);
 
+        if(ApplicationBuilder.useStaticAssets && x.pathname.startsWith(ApplicationBuilder.staticAssetPath)){
+            console.log("create method to load assets from provided path")
+        }
+
+        try{
         let controller = "";
         let method = ""
         if(x.pathname == "/"){
@@ -33,11 +39,32 @@ class ServiceCollection implements Partial<IServiceCollection>{
         }
         const classLoader = await import(`../Controllers/${controller}Controller.ts`)
         var instance = new classLoader[`${controller}Controller`]
-        return await instance[method](x,this.res);
+        var actionResponse = await instance[method](x,this.res);
+        console.log(actionResponse);
+        this.CreateResponseResult(actionResponse);
+        }catch(err:any){
+            this.CreateResponseResult({
+                statusCode:500,
+                type:"document",
+                body:err.toString()
+            })
+        }
+        this.res?.end(); 
     }
 
     public AddSingleton<V>(key:string,dependency:V):void{
         SingletonService.Add(key,dependency);
+    }
+
+    public GetRequest():IncomingMessage | null{
+        return this.req;
+    }
+
+    private CreateResponseResult(options:any){
+        this.res?.writeHead(options.statusCode, {
+            "Content-Type": options.type
+        })
+        return this.res?.write(options.body)
     }
 }
 
